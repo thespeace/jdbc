@@ -1,5 +1,6 @@
 package thespeace.jdbc.connection;
 
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -63,5 +64,43 @@ public class ConnectionTest {
         Connection con2 = dataSource.getConnection();
         log.info("connection={}, class={}", con1, con1.getClass());
         log.info("connection={}, class={}", con2, con2.getClass());
+    }
+
+    /**
+     * <h2>DataSource 를 통해 커넥션 풀을 사용</h2>
+     * <ul>
+     *     <li>HikariCP 커넥션 풀을 사용, {@code HikariDataSource}는 {@code DataSource} 인터페이스를 구현하고 있다.</li>
+     *     <li>커넥션 풀에서 커넥션을 생성하는 작업은 애플리케이션 실행 속도에 영향을 주지 않기 위해 별도의 쓰레드에서 작동한다.
+     *         별도의 쓰레드에서 동작하기 때문에 테스트가 먼저 종료되어 버린다. 예제처럼 Thread.sleep 을 통해 대기 시간을
+     *         주어야 쓰레드 풀에 커넥션이 생성되는 로그를 확인할 수 있다.</li>
+     * </ul>
+     * <p>
+     * <h3>MyPool connection adder</h3>
+     * 별도의 쓰레드 사용해서 커넥션 풀에 커넥션을 채우고 있는 것을 확인할 수 있다. 이 쓰레드는 커넥션 풀에 커넥션을 최대 풀 수( 10 )까지 채운다.<br>
+     * 그렇다면 왜 별도의 쓰레드를 사용해서 커넥션 풀에 커넥션을 채우는 것일까?<br>
+     * 커넥션 풀에 커넥션을 채우는 것은 상대적으로 오래 걸리는 일이다. 애플리케이션을 실행할 때 커넥션 풀을 채울 때 까지
+     * 마냥 대기하고 있다면 애플리케이션 실행 시간이 늦어진다. 따라서 이렇게 별도의 쓰레드를 사용해서 커넥션 풀을 채워야
+     * 애플리케이션 실행 시간에 영향을 주지 않는다.
+     * <p>
+     * <h3>커넥션 풀에서 커넥션 획득</h3>
+     * 커넥션 풀에서 커넥션을 획득하고 그 결과를 출력했다. 여기서는 커넥션 풀에서 커넥션을 2개 획득하고 반환하지는 않았다.
+     * 따라서 풀에 있는 10개의 커넥션 중에 2개를 가지고 있는 상태이다. 그래서 마지막 로그를 보면 사용중인 커넥션
+     * `active=2` , 풀에서 대기 상태인 커넥션 `idle=8` 을 확인할 수 있다.<br>
+     * {@code MyPool - After adding stats (total=10, active=2, idle=8, waiting=0)}
+     *
+     * @see <a href="https://github.com/brettwooldridge/HikariCP">HikariCP 커넥션 풀 공식 사이트</a>
+     */
+    @Test
+    void dataSourceConnectionPool() throws SQLException, InterruptedException {
+        //커넥션 풀링 : HikariProxyConnection(Proxy) -> JdbcConnection(Target)
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setJdbcUrl(URL);
+        dataSource.setUsername(USERNAME);
+        dataSource.setPassword(PASSWORD);
+        dataSource.setMaximumPoolSize(10); //설정, 최대 풀 수.
+        dataSource.setPoolName("MyPool"); //설정, 풀의 이름.
+
+        useDataSource(dataSource);
+        Thread.sleep(1000); //커넥션 풀에서 커넥션 생성 시간 대기
     }
 }
