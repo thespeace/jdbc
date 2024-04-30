@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import thespeace.jdbc.domain.Member;
 import thespeace.jdbc.repository.MemberRepository;
 import thespeace.jdbc.repository.MemberRepositoryV4_1;
+import thespeace.jdbc.repository.MemberRepositoryV4_2;
 
 import javax.sql.DataSource;
 
@@ -65,7 +66,8 @@ class MemberServiceV4Test {
         }
         @Bean
         MemberRepository memberRepository() {
-            return new MemberRepositoryV4_1(dataSource); //단순 예외 변환
+//            return new MemberRepositoryV4_1(dataSource); //단순 예외 변환
+            return new MemberRepositoryV4_2(dataSource); //스프링 예외 변환
         }
         @Bean
         MemberServiceV4 memberServiceV4() {
