@@ -1,6 +1,8 @@
 # 트랜잭션 문제 해결 - 트랜잭션 매니저2
 그림으로 트랜잭션 매니저의 전체 동작 흐름을 자세히 이해해보자.
 
+<br>
+
 ### 트랜잭션 매니저 1 - 트랜잭션 시작
 ![Spring_and_problem_solving(transactions)-Transaction_Manager](Spring_and_problem_solving(transactions)-Transaction_Manager2_1.PNG)
 
